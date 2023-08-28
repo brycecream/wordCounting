@@ -1,0 +1,53 @@
+/* Reset margin and padding */
+body, html, #canvas, #controlPanel {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Hide scrollbars */
+body, html {
+  overflow: hidden;
+}
+
+/* Control Panel styling */
+#controlPanel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 1em;
+  border-radius: 5px;
+}
+
+/* Input and buttons */
+input[type="text"], button {
+  margin-bottom: 1em;
+}
+
+/* Choices */
+#choicesDiv {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+/* Make choice buttons stack on smaller screens */
+@media (max-width: 600px) {
+  #choicesDiv {
+    flex-direction: column;
+  }
+  button {
+    margin-bottom: 0.5em;
+  }
+}
+
+/* Result */
+#result {
+  display: block;
+}
+
+
+
+

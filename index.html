@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Three.js Word Game</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+   <div id="controlPanel">
+    <!-- Input form -->
+    <input type="text" id="wordInput" placeholder="Type a word">
+    <button id="generateBtn">Generate</button><br><br>
+    <div>
+      <p>Can you count how many words are spelt correctly?</p>
+    </div>
+    <div id="choicesDiv">
+      <button id="choice1">-</button>
+      <button id="choice2">-</button>
+      <button id="choice3">-</button>
+      <button id="choice4">-</button>
+    </div>
+    <span id="result"></span>
+  </div>
+
+  <!-- 3D Canvas -->
+  <div id="canvas"></div>
+</body>
+<script src="script.js"></script>
+
+</html>
+
