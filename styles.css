@@ -10,20 +10,49 @@ body, html {
   overflow: hidden;
 }
 
+/* Make the body a flex container and orient items vertically */
+body {
+  display: flex;
+  flex-direction: column;
+}
+
 /* Control Panel styling */
 #controlPanel {
   position: absolute;
-  top: 0;
-  left: 0;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   z-index: 1;
   background-color: rgba(255, 255, 255, 0.8);
   padding: 1em;
   border-radius: 5px;
+  font-family: 'Arial', sans-serif;
 }
 
 /* Input and buttons */
 input[type="text"], button {
   margin-bottom: 1em;
+  padding: 0.5em;  /* New */
+  font-size: 3em;  /* New */
+}
+
+input[type="text"] {
+  width: 100%;  /* New */
+  border: 2px solid #ccc;  /* New */
+  border-radius: 4px;  /* New */
+}
+
+button {
+  background-color: #007bff;  /* New */
+  color: white;  /* New */
+  border: none;  /* New */
+  border-radius: 4px;  /* New */
+  cursor: pointer;  /* New */
+  transition: background-color 0.3s ease;  /* New */
+}
+
+button:hover {
+  background-color: #0056b3;  /* New */
 }
 
 /* Choices */
@@ -48,6 +77,46 @@ input[type="text"], button {
   display: block;
 }
 
+/* Header */
+#game-header {
+  background-color: #333;
+  color: white;
+  text-align: center;
+  padding: 1em 0;
+  font-family: 'Arial', sans-serif;
+  box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.2);
+}
 
+#game-header h1 {
+  font-size: 2em;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
 
+/* Canvas */
+#canvas {
+  flex-grow: 1; /* This will make the canvas take up all available space */
+}
 
+/* Countdown Panel */
+#countdownPanel {
+  font-family: 'Arial', sans-serif;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 1em;
+  border-radius: 5px;
+  text-align: center;
+  display: none;  /* Initially hidden */
+}
+
+#countdownWord {
+  font-size: 10em;
+}
+
+#countdownTimer {
+  font-size: 7em;
+}

@@ -3,14 +3,19 @@
 <head>
   <title>Three.js Word Game</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+   <script src="https://cdn.jsdelivr.net/npm/three@0.131.2/examples/js/loaders/GLTFLoader.js"></script>
+   <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-
+  <header id="game-header">
+    <h1>Awesome Word Game</h1>
+  </header>
    <div id="controlPanel">
     <!-- Input form -->
     <input type="text" id="wordInput" placeholder="Type a word">
-    <button id="generateBtn">Generate</button><br><br>
+    <button id="generateBtn">Play</button><br><br>
     <div>
       <p>Can you count how many words are spelt correctly?</p>
     </div>
@@ -21,6 +26,11 @@
       <button id="choice4">-</button>
     </div>
     <span id="result"></span>
+  </div>
+
+  <div id="countdownPanel">
+    <h2 id="countdownWord"></h2>
+    <h1 id="countdownTimer"></h1>
   </div>
 
   <!-- 3D Canvas -->

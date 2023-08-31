@@ -1,104 +1,105 @@
-// Declare global variables for the Three.js scene, camera, renderer, and game logic.
 let camera, scene, renderer;
-let words = [];  // Array to store the 3D text objects.
-let correctCount = 0;  // Counter for correct word instances.
+let words = [];
+let models = [];
+let correctCount = 0;
+let globalModel;
 
 
+async function loadModel() {
+  return new Promise((resolve, reject) => {
+    const loader = new THREE.GLTFLoader();
+    loader.load('model/scene.gltf', function(gltf) {
+      const model = gltf.scene;
+      model.scale.set(3, 3, 3);
+      resolve(model);
+    });
+  });
+}
 
 function onWindowResize() {
-  // Update camera aspect ratio
   camera.aspect = window.innerWidth / window.innerHeight;
-
-  // Update the camera's frustum
   camera.updateProjectionMatrix();
-
-  // Update the size of the renderer AND the canvas
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
+function toggleControlPanel() {
+  const controlPanel = document.getElementById("controlPanel");
+  if (controlPanel.style.display === "none") {
+    controlPanel.style.display = "block";
+  } else {
+    controlPanel.style.display = "none";
+  }
+}
 
-// Initialize the Three.js scene, camera, and renderer.
-function init() {
-  
-  // Get the container to which we'll attach the renderer.
+async function init() {
   const container = document.getElementById('canvas');
-  
-  // Initialize a perspective camera.
   camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 10);
-  camera.position.z = 5;  // Set the camera's position.
-
-  // Create a new Three.js scene.
+  camera.position.z = 5;
   scene = new THREE.Scene();
 
-  // Initialize the WebGL renderer with antialiasing.
+  // Load and set the background image
+  const loader = new THREE.TextureLoader();
+  loader.load('1694.jpg', function(texture) {
+    scene.background = texture;
+  });
+
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+  scene.add(ambientLight);
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+  directionalLight.position.set(0, 1, 0);
+  scene.add(directionalLight);
+
   renderer = new THREE.WebGLRenderer({ antialias: true });
-
-    // Handle high-density displays
-    renderer.setPixelRatio(window.devicePixelRatio);
-
-
-  // Set the renderer size to fill the window.
+  renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
-
-  // Attach the renderer's output (the canvas) to the container.
   container.appendChild(renderer.domElement);
 
-  // Call the resize function to fit the initial window size.
-  onWindowResize();
-
-  // Attach the resize event listener to the window
   window.addEventListener('resize', onWindowResize, false);
 
-  // Start the animation loop.
+  document.getElementById("controlPanel").style.display = "block";
+
+  globalModel = await loadModel();
+
   animate();
 }
 
-// Function for the animation loop.
+
 function animate() {
-  // Request a new animation frame.
   requestAnimationFrame(animate);
 
-  // Loop through each word object to update its position.
-  words.forEach(word => {
-    // Update the x-coordinate of the word's position based on its velocity.
-    word.position.x += word.velocity.x;
+  const time = Date.now() * 0.001;  // Current time in seconds
 
-    // Remove the word from the scene if it goes too far off-screen.
-    if (Math.abs(word.position.x) > 8) {
-      scene.remove(word);
-      words = words.filter(w => w !== word);  // Remove the word from the array.
+  words.forEach(word => {
+    if (word && word.position && word.velocity) {
+      word.position.x += word.velocity.x;
+      if (Math.abs(word.position.x) > 8) {
+        scene.remove(word);
+        words = words.filter(w => w !== word);
+      }
     }
   });
 
-  // Render the scene from the camera's viewpoint.
+  models.forEach(model => {
+    if (model && model.position && model.velocity) {
+      model.position.x += model.velocity.x;
+      if (Math.abs(model.position.x) > 8) {
+        scene.remove(model);
+        models = models.filter(m => m !== model);
+      }
+
+      // Make the model "rock" back and forth along the Z-axis
+      const amplitudeZ = 0.1;  // Amplitude of the rocking motion along the Z-axis
+      model.rotation.z = amplitudeZ * Math.sin(time * 2 * Math.PI);  // Oscillate the rotation around the Z-axis
+
+      // Make the model "tilt" side to side along the X-axis
+      const amplitudeX = .2;  // Amplitude of the tilting motion along the X-axis
+      model.rotation.x = amplitudeX * Math.sin(time * 1.5 * Math.PI);  // Oscillate the rotation around the X-axis
+    }
+  });
+
   renderer.render(scene, camera);
 }
 
-// Function to shuffle an array.
-function shuffle(array) {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];  // Swap elements.
-  }
-}
-
-// Function to check if the user's guess is correct.
-function checkChoice(event) {
-  // Parse the user's choice.
-  const userChoice = parseInt(event.target.textContent, 10);
-  
-  // Get the element where the result will be displayed.
-  const resultElement = document.getElementById("result");
-
-  // Check if the user's choice matches the correct count.
-  if (userChoice === correctCount) {
-    resultElement.textContent = "Correct!";
-    resultElement.style.color = "green";
-  } else {
-    resultElement.textContent = "Wrong!";
-    resultElement.style.color = "red";
-  }
-}
 
 function introduceTypos(word, numTypos) {
   const alphabet = 'abcdefghijklmnopqrstuvwxyz';
@@ -113,111 +114,151 @@ function introduceTypos(word, numTypos) {
   return typoWord;
 }
 
-// Function to toggle visibility of the control panel
-function toggleControlPanel() {
-  const controlPanel = document.getElementById("controlPanel");
-  if (controlPanel.style.display === "none") {
-    controlPanel.style.display = "block";
-  } else {
-    controlPanel.style.display = "none";
-  }
-}
+async function startCountdown() {
+  // Show the countdown panel
+  const countdownPanel = document.getElementById('countdownPanel');
+  countdownPanel.style.display = 'block';
 
-// Updated generateWords function
-function generateWords() {
-  // Reset correct count
-  correctCount = 0;
+  // Get the word from the input and display it
+  const inputText = document.getElementById('wordInput').value;
+  document.getElementById('countdownWord').textContent = inputText;
 
-  // Hide the control panel after clicking the button
-  toggleControlPanel();
+  // Start the countdown
+  let countdown = 5;
+  const countdownTimer = document.getElementById('countdownTimer');
+  countdownTimer.textContent = countdown;
 
-  // Get user input
-  const userInput = document.getElementById("wordInput").value;
+  return new Promise(resolve => {
+    const interval = setInterval(() => {
+      countdown--;
+      countdownTimer.textContent = countdown;
 
-  // Generate 3D text
-  const loader = new THREE.FontLoader();
-  loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function (font) {
-    const numWords = Math.floor(Math.random() * 11) + 10; // Random number of words between 10 and 20
-    const spawnPositionsY = new Set(); // Store Y positions of spawned words
-
-    for (let i = 0; i < numWords; i++) {
-      setTimeout(() => {
-        let text = userInput;
-
-        if (Math.random() < 0.3 && text.length > 1) {
-          const numTypos = Math.floor(Math.random() * 2) + 2; // Number of typos will be either 2 or 3
-          text = introduceTypos(text, numTypos);
-        } else {
-          correctCount++;
-        }
-
-        // Generate the 3D geometry for the word.
-        const geometry = new THREE.TextGeometry(text, {
-          font: font,
-          size: 0.6,
-          height: 0.05,
-          curveSegments: 12,
-          bevelEnabled: false,
-        });
-
-        // Create a red material for the word.
-        const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-
-        // Create a mesh for the 3D word.
-        const mesh = new THREE.Mesh(geometry, material);
-
-        // Assign random velocity for the word's movement.
-        const randomSpeed = (Math.random() + 0.5) * 0.04; // Speed between 0.005 and 0.015
-        mesh.velocity = { x: Math.random() > 0.5 ? randomSpeed : -randomSpeed };
-
-        // Set an initial random position for the word.
-        let posY;
-        do {
-          posY = Math.random() * 6 - 3; // Random Y position
-        } while (spawnPositionsY.has(posY)); // Ensure no overlapping on the same line
-        spawnPositionsY.add(posY);
-        mesh.position.set(mesh.velocity.x > 0 ? -5 : 5, posY, Math.random() * 2 - 1);
-
-        // Add the word to the Three.js scene and the words array.
-        scene.add(mesh);
-        words.push(mesh);
-      }, i * 1000);
-    }
-
-    // Show the control panel back and update the multiple-choice options after all words are generated.
-    setTimeout(() => {
-      toggleControlPanel();
-      
-      // Create multiple-choice options.
-      const choices = [correctCount, correctCount + 1, correctCount - 1, correctCount + 2];
-      shuffle(choices);
-
-      // Update the text content of the multiple-choice buttons.
-      document.getElementById("choice1").textContent = choices[0];
-      document.getElementById("choice2").textContent = choices[1];
-      document.getElementById("choice3").textContent = choices[2];
-      document.getElementById("choice4").textContent = choices[3];
-    }, (numWords + 2) * 1000);  // Wait for all words to be generated + 1s buffer time.
+      if (countdown === 0) {
+        clearInterval(interval);
+        countdownPanel.style.display = 'none';  // Hide the countdown panel
+        resolve();
+      }
+    }, 1000);
   });
 }
 
 
-// Your DOMContentLoaded code should look the same
-document.addEventListener("DOMContentLoaded", function () {
-  init();  // Initialize the Three.js scene.
-  
-  // Make sure controlPanel is initially visible
-  document.getElementById("controlPanel").style.display = "block";
+async function generateWords() {
+  toggleControlPanel();
 
-  // Attach event listeners to various elements.
-  document.getElementById("generateBtn").addEventListener("click", generateWords);
-  document.getElementById("choice1").addEventListener("click", checkChoice);
-  document.getElementById("choice2").addEventListener("click", checkChoice);
-  document.getElementById("choice3").addEventListener("click", checkChoice);
-  document.getElementById("choice4").addEventListener("click", checkChoice);
-});
+  // Start the countdown
+  await startCountdown();
 
+  const inputText = document.getElementById('wordInput').value;
+  if (!inputText) return;
 
+  const fontLoader = new THREE.FontLoader();
+  fontLoader.load('test2.json', function(font) {
+    correctCount = 0;
 
+    // Generate a random number between 10 and 30
+    const numWords = Math.floor(Math.random() * (31 - 10)) + 10;
 
+    for (let i = 0; i < numWords; i++) {
+      setTimeout(() => {
+        let text = inputText;
 
+        if (Math.random() < 0.3) {
+          text = introduceTypos(text, 1);
+        } else {
+          correctCount++;
+        }
+
+        let textGeometry = new THREE.TextGeometry(text, {
+          font: font,
+          size: 0.5,
+          height: 0,
+        });
+
+        const textMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+        const mesh = new THREE.Mesh(textGeometry, textMaterial);
+
+        const minVelocity = -0.09;
+        const maxVelocity = 0.09;
+        let velocityX;
+        
+        do {
+          velocityX = Math.random() * (maxVelocity - minVelocity) + minVelocity;
+        } while (Math.abs(velocityX) < 0.05);  // Re-generate if the absolute value is less than 0.05
+        
+
+        const minY = -2;
+        const maxY = 3;
+        const randomY = Math.random() * (maxY - minY) + minY;
+
+        const initialX = velocityX > 0 ? -8 : 8;
+
+        mesh.position.set(initialX, randomY, 0);
+        mesh.velocity = { x: velocityX };
+
+        scene.add(mesh);
+        words.push(mesh);
+
+        if (globalModel) {
+          const modelClone = globalModel.clone();
+          const textMeshBoundingBox = new THREE.Box3().setFromObject(mesh);
+          const textMeshSize = textMeshBoundingBox.getSize(new THREE.Vector3());
+        
+          // Position the model directly below the text
+          modelClone.position.set(initialX, mesh.position.y - textMeshSize.y, mesh.position.z);
+          modelClone.velocity = { x: velocityX };
+        
+          // Try setting the initial rotation based on the direction of movement.
+          // You may need to adjust these values.
+           if (velocityX > 0) {
+    modelClone.rotation.set(0, -Math.PI / 2, 0);  // Adjust these values
+  } else {
+    modelClone.rotation.set(0, Math.PI / 2, 0);  // Adjust these values
+  }
+        
+          // Store the initial Z rotation for later use
+          modelClone.userData.initialZRotation = modelClone.rotation.z;
+        
+          scene.add(modelClone);
+          models.push(modelClone);
+        }
+      }, i * 2000);
+    }
+
+    setTimeout(() => {
+      toggleControlPanel();
+    
+      const choices = [correctCount, correctCount + 1, correctCount - 1, correctCount + 2];
+      shuffleArray(choices);  // Shuffle the choices
+    
+      document.getElementById('choice1').textContent = choices[0];
+      document.getElementById('choice2').textContent = choices[1];
+      document.getElementById('choice3').textContent = choices[2];
+      document.getElementById('choice4').textContent = choices[3];
+    }, numWords * 2000 + 2000);
+  });
+}
+
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+ 
+function checkChoice(event) {
+  const userChoice = parseInt(event.target.textContent, 10);
+  if (userChoice === correctCount) {
+    alert("Correct!");
+  } else {
+    alert("Wrong!");
+  }
+}
+
+document.getElementById('generateBtn').addEventListener('click', generateWords);
+document.getElementById('choice1').addEventListener('click', checkChoice);
+document.getElementById('choice2').addEventListener('click', checkChoice);
+document.getElementById('choice3').addEventListener('click', checkChoice);
+document.getElementById('choice4').addEventListener('click', checkChoice);
+
+init();
